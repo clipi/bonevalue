@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+    <head>
+	    <script type="text/javascript" src="scripts/BV.js"></script>
+	    <script type="text/javascript">
+	        // Define an Echo module with a slight twist
+	        $BV.module("My.Echo.Module", function(e) {
+	            // e = { request: { ... }, callback: function(response) { ... } }
+	            var chineseWhispers = "Not "+e.request.text;
+	            console.log("Routing data: "+chineseWhispers);
+	            e.callback({text: chineseWhispers});
+	        });
+
+	        // Whenever a peer connects, send them an Echo request
+	        $BV.on("peerconnect", function(peer) {
+	            // peer = { name: "admin", id: "17234564" }
+	            $BV.get(peer.id).message("My.Echo.Module", { text: "Friday" }, function(response) {
+	                // response = { ... }
+	                console.log("Received: "+response.text);
+	            });
+	        });
+
+	        // Kick off the process
+	        $BV.connect("admin", "test");
+	    </script>
+	</head>
+	<body>
+	    &nbsp;
+	</body>
+</html>
