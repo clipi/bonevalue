@@ -129,7 +129,7 @@ BV.Objects.PeerManager = function(EventBus) {
     });
     
     //
-    // 
+    // Wait for the PeerAdd event, add the new peerId to our list
     //
     EventBus.wait(BV.Event.Net.PeerAdd, function(peer) {
         var peerId = peer.id; 

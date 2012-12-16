@@ -9,7 +9,7 @@ Welcome to project BoneValue! The goal is to provide a platform for devloping we
 Project structure:
 
 - **p2p-platform** contains everything you need *(apart from a polyfill)* to start building your own p2p webapp  
-- **src** contains the raw source code and some unit tests  
+- **src** contains raw source code for the clientside javascript and some unit tests  
 
 # Example p2p WebApp
 
@@ -20,7 +20,7 @@ Project structure:
     
 ##Client
 
-Open up several instances of the following page, open + read the javascript console and everything should make sense.
+Open up several instances of the following page, open + read the javascript console and everything should make sense. **You might need to add a polyfill for the WebRTC DataChannel**
 
 	<!doctype html>
 	<html>
