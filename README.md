@@ -38,7 +38,7 @@ Open up several instances of the following page, open + read the javascript cons
 		        // Whenever a peer connects, send them an Echo request
 		        $BV.on("peerconnect", function(peer) {
 		            // peer = { name: "admin", id: "17234564" }
-		            $BV.get(peer.id).message("My.Echo.Module", { text: "Friday" }, function(response) {
+		            $BV.get(peer.id).message("My.Echo.Module", { text: "Friday" }, false, function(response) {
 		                // response = { ... }
 		                console.log("Received: "+response.text);
 		            });
@@ -95,16 +95,16 @@ The p2p communication is implemented RPC style. Functionality should be pushed i
 The global $BV object has a function .get("") which takes a query string and returns an object granting access to p2p communication. The query can be "*" for every peer, or a username "Oli" for every peer beloning to the account "Oli", or a specific peerId "6826386814235" for just one specific peer. The .get() function will ALWAYS return an object containing a function .message() which will target all peers you queried for.
 
 	:::javascript
-	$BV.get("*").message("My.Echo.Module", { text: "Friday" }, function(response) {
+	$BV.get("*").message("My.Echo.Module", { text: "Friday" }, false, function(response) {
 	    // will send the message to all peers
 	});
-	$BV.get("Us").message("My.Echo.Module", { text: "Friday" }, function(response) {
+	$BV.get("Us").message("My.Echo.Module", { text: "Friday" }, false, function(response) {
 	    // will send the message to all of the current users peers
 	});
-	$BV.get("admin").message("My.Echo.Module", { text: "Friday" }, function(response) {
+	$BV.get("admin").message("My.Echo.Module", { text: "Friday" }, false, function(response) {
 	    // will send the message to all of the user "admin"s peers
 	});
-	$BV.get("8722369652").message("My.Echo.Module", { text: "Friday" }, function(response) {
+	$BV.get("8722369652").message("My.Echo.Module", { text: "Friday" }, false, function(response) {
 	    // will send the message directly to the peer whose peerId is 8722369652
 	});
 	
@@ -112,7 +112,8 @@ The global $BV object has a function .get("") which takes a query string and ret
 
 - The first parameter is the name of the module you want to target.  
 - The second parameter is an object containing any data you wish to send to the other peer.  
-- The third parameter is a callback function which will be invoked when the other peer responds to the request.  
+- The third parameter specifies if you want to keep the connection to the peer active. It improves performance when sending lots of requests to the same peer.  
+- The fourth parameter is a callback function which will be invoked when the other peer responds to the request.  
 
 ## Creating a Module
 

@@ -53,11 +53,16 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
         used=true; 
         clearDeleteFunction();
     };
-    function removedDataChannel() { 
+    function removedDataChannel(keepAlive) { 
         connectionCounter--; 
         if (connectionCounter==0) {
-            clearDeleteFunction();
-            startDeleteFunction();
+            if (!keepAlive) {
+                console.error("Killed");
+                deleteFunction();
+            } else {
+                clearDeleteFunction();
+                startDeleteFunction();
+            }
         }
     };
     
@@ -208,7 +213,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     //
     // Either Peer tries to send a message to the other
     //
-    function sendMessage(module, data, callback) {
+    function sendMessage(module, data, keepAlive, callback) {
         var dataChannel = pc.createDataChannel(Math.floor(Math.random()*999999999));
         //
         // Set a timeout incase the other Peer has disconnected on us
@@ -238,7 +243,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
             var data = JSON.parse(message.data);
             callback(data);
             if (BV.Settings.Debug) console.log(id+": Received"+data);
-            dataChannel.close();
+            dataChannel.close(keepAlive);
         };
         
         //

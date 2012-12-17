@@ -17,6 +17,7 @@ function buildEnvironment() {
     tmp.PeerManager = new BV.Objects.PeerManager(tmp.EventBus);
     tmp.Users = new BV.Objects.Users(tmp.EventBus, tmp.PeerManager);
     tmp.Net.setHost("localhost:8000");
+    BV.Module["BV.Module.Echo"] = "BV.Module.Echo";
     return tmp;
 }
 
@@ -99,7 +100,7 @@ asyncTest( "Peer Communication Test - 2 Peers - PeerA>PeerB", 9, function() {
                 equal("1w2e3r4t", e.request, "peerA -> peerB echo test");
                 e.callback(e.request);
             });
-            peerA.Users.get().message("BV.Module.Echo", "1w2e3r4t", function(data) {
+            peerA.Users.get().message("BV.Module.Echo", "1w2e3r4t", false, function(data) {
                 equal("1w2e3r4t", data, "peerA -> peerB -> peerA echo test");
                 peerA.Net.disconnect();
             });
@@ -141,7 +142,7 @@ asyncTest( "Peer Communication Test - 2 Peers - PeerB>PeerA", 9, function() {
                 equal("dvfbhtrefgh86", e.request, "peerB -> peerA echo test");
                 e.callback(e.request);
             });
-            peerB.Users.get().message("BV.Module.Echo", "dvfbhtrefgh86", function(data) {
+            peerB.Users.get().message("BV.Module.Echo", "dvfbhtrefgh86", false, function(data) {
                 equal("dvfbhtrefgh86", data, "peerB -> peerA -> peerB echo test");
                 peerA.Net.disconnect();
             });
@@ -268,19 +269,19 @@ asyncTest( "Peer Communication Test - 4 peers - All Broadcast", 31, function() {
             peerC.EventBus.wait("BV.Module.Echo", function(e) { e.callback(e.request); });
             peerD.EventBus.wait("BV.Module.Echo", function(e) { e.callback(e.request); });
             
-            peerA.Users.get().message("BV.Module.Echo", "w2jgfu73hjrgu3", function(data) {
+            peerA.Users.get().message("BV.Module.Echo", "w2jgfu73hjrgu3", false, function(data) {
                 equal("w2jgfu73hjrgu3", data, "peerA -> * echo test");
                 countDown();
             });
-            peerB.Users.get().message("BV.Module.Echo", "oitjguornfguie4", function(data) {
+            peerB.Users.get().message("BV.Module.Echo", "oitjguornfguie4", false, function(data) {
                 equal("oitjguornfguie4", data, "peerB -> * echo test");
                 countDown();
             });
-            peerC.Users.get().message("BV.Module.Echo", "fghjklkjhgfd", function(data) {
+            peerC.Users.get().message("BV.Module.Echo", "fghjklkjhgfd", false, function(data) {
                 equal("fghjklkjhgfd", data, "peerC -> * echo test");
                 countDown();
             });
-            peerD.Users.get().message("BV.Module.Echo", "9ijhnbvfde367ijhgf", function(data) {
+            peerD.Users.get().message("BV.Module.Echo", "9ijhnbvfde367ijhgf", false, function(data) {
                 equal("9ijhnbvfde367ijhgf", data, "peerD -> * echo test");
                 countDown();
             });
@@ -382,19 +383,19 @@ asyncTest( "Peer Discovery Test - 2+2 peers", 36, function() {
                     peerC.EventBus.wait("BV.Module.Echo", function(e) { e.callback(e.request); });
                     peerD.EventBus.wait("BV.Module.Echo", function(e) { e.callback(e.request); });
                     
-                    peerA.Users.get().message("BV.Module.Echo", "w2jgfu73hjrgu3", function(data) {
+                    peerA.Users.get().message("BV.Module.Echo", "w2jgfu73hjrgu3", false, function(data) {
                         equal("w2jgfu73hjrgu3", data, "peerA -> * echo test");
                         countDown();
                     });
-                    peerB.Users.get().message("BV.Module.Echo", "oitjguornfguie4", function(data) {
+                    peerB.Users.get().message("BV.Module.Echo", "oitjguornfguie4", false, function(data) {
                         equal("oitjguornfguie4", data, "peerB -> * echo test");
                         countDown();
                     });
-                    peerC.Users.get().message("BV.Module.Echo", "fghjklkjhgfd", function(data) {
+                    peerC.Users.get().message("BV.Module.Echo", "fghjklkjhgfd", false, function(data) {
                         equal("fghjklkjhgfd", data, "peerC -> * echo test");
                         countDown();
                     });
-                    peerD.Users.get().message("BV.Module.Echo", "9ijhnbvfde367ijhgf", function(data) {
+                    peerD.Users.get().message("BV.Module.Echo", "9ijhnbvfde367ijhgf", false, function(data) {
                         equal("9ijhnbvfde367ijhgf", data, "peerD -> * echo test");
                         countDown();
                     });

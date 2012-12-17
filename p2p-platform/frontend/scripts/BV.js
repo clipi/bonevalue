@@ -322,19 +322,19 @@ BV.Objects.PeerManager = function(EventBus) {
     //
     // The end goal: Send a message to the desired module of another peer
     //
-    function sendToPeer(peerId, module, data, callback) {
+    function sendToPeer(peerId, module, keepAlive, data, callback) {
         getPeer(peerId, function(somePeer) {
-            somePeer.sendMessage(module, data, callback);
+            somePeer.sendMessage(module, data, keepAlive, callback);
         });
     };
     
     //
     // Send a message to all Peers belonging to an alias
     //
-    function sendToAlias(alias, module, data, callback) {
+    function sendToAlias(alias, module, keepAlive, data, callback) {
         for (var peerId in allPeers) {
             if (allPeers[peerId] == alias) {
-                sendToPeer(peerId, module, data, callback);
+                sendToPeer(peerId, module, keepAlive, data, callback);
             }
         }
     };
@@ -344,7 +344,7 @@ BV.Objects.PeerManager = function(EventBus) {
     //
     function broadcast(module, data, callback) { 
         for(var peerId in allPeers) {
-            sendToPeer(peerId, module, data, callback);
+            sendToPeer(peerId, module, false, data, callback);
         }
     };
     
@@ -417,11 +417,16 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
         used=true; 
         clearDeleteFunction();
     };
-    function removedDataChannel() { 
+    function removedDataChannel(keepAlive) { 
         connectionCounter--; 
         if (connectionCounter==0) {
-            clearDeleteFunction();
-            startDeleteFunction();
+            if (!keepAlive) {
+                console.error("Killed");
+                deleteFunction();
+            } else {
+                clearDeleteFunction();
+                startDeleteFunction();
+            }
         }
     };
     
@@ -572,7 +577,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     //
     // Either Peer tries to send a message to the other
     //
-    function sendMessage(module, data, callback) {
+    function sendMessage(module, data, keepAlive, callback) {
         var dataChannel = pc.createDataChannel(Math.floor(Math.random()*999999999));
         //
         // Set a timeout incase the other Peer has disconnected on us
@@ -602,7 +607,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
             var data = JSON.parse(message.data);
             callback(data);
             if (BV.Settings.Debug) console.log(id+": Received"+data);
-            dataChannel.close();
+            dataChannel.close(keepAlive);
         };
         
         //
@@ -676,7 +681,7 @@ BV.Objects = BV.Objects || {};
 //
 BV.Objects.Users = function(EventBus, PeerManager) {
     var userList = {
-        message: function(module, data, callback) {
+        message: function(module, data, keepAlive, callback) {
             PeerManager.broadcast(module, data, callback);
         }
     };
@@ -687,7 +692,7 @@ BV.Objects.Users = function(EventBus, PeerManager) {
     EventBus.wait(BV.Event.Net.UserAdd, function(alias) {
         if (!userList.hasOwnProperty(alias)) {
             userList[alias] = {
-                message: function(module, outData, callback) {
+                message: function(module, outData, keepAlive, callback) {
                     PeerManager.sendToAlias(alias, module, outData, callback);
                 }
             };
@@ -699,7 +704,7 @@ BV.Objects.Users = function(EventBus, PeerManager) {
     //
     EventBus.wait(BV.Event.Net.PeerAdd, function(data) {
         userList[data.name][data.id] = {
-            message: function(module, outData, callback) {
+            message: function(module, outData, keepAlive, callback) {
                 PeerManager.sendToPeer(data.id, module, outData, callback);
             }
         };

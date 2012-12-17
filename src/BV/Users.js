@@ -6,7 +6,7 @@ BV.Objects = BV.Objects || {};
 //
 BV.Objects.Users = function(EventBus, PeerManager) {
     var userList = {
-        message: function(module, data, callback) {
+        message: function(module, data, keepAlive, callback) {
             PeerManager.broadcast(module, data, callback);
         }
     };
@@ -17,7 +17,7 @@ BV.Objects.Users = function(EventBus, PeerManager) {
     EventBus.wait(BV.Event.Net.UserAdd, function(alias) {
         if (!userList.hasOwnProperty(alias)) {
             userList[alias] = {
-                message: function(module, outData, callback) {
+                message: function(module, outData, keepAlive, callback) {
                     PeerManager.sendToAlias(alias, module, outData, callback);
                 }
             };
@@ -29,7 +29,7 @@ BV.Objects.Users = function(EventBus, PeerManager) {
     //
     EventBus.wait(BV.Event.Net.PeerAdd, function(data) {
         userList[data.name][data.id] = {
-            message: function(module, outData, callback) {
+            message: function(module, outData, keepAlive, callback) {
                 PeerManager.sendToPeer(data.id, module, outData, callback);
             }
         };

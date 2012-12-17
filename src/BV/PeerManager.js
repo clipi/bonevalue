@@ -211,19 +211,19 @@ BV.Objects.PeerManager = function(EventBus) {
     //
     // The end goal: Send a message to the desired module of another peer
     //
-    function sendToPeer(peerId, module, data, callback) {
+    function sendToPeer(peerId, module, keepAlive, data, callback) {
         getPeer(peerId, function(somePeer) {
-            somePeer.sendMessage(module, data, callback);
+            somePeer.sendMessage(module, data, keepAlive, callback);
         });
     };
     
     //
     // Send a message to all Peers belonging to an alias
     //
-    function sendToAlias(alias, module, data, callback) {
+    function sendToAlias(alias, module, keepAlive, data, callback) {
         for (var peerId in allPeers) {
             if (allPeers[peerId] == alias) {
-                sendToPeer(peerId, module, data, callback);
+                sendToPeer(peerId, module, keepAlive, data, callback);
             }
         }
     };
@@ -233,7 +233,7 @@ BV.Objects.PeerManager = function(EventBus) {
     //
     function broadcast(module, data, callback) { 
         for(var peerId in allPeers) {
-            sendToPeer(peerId, module, data, callback);
+            sendToPeer(peerId, module, false, data, callback);
         }
     };
     
