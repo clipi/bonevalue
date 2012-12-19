@@ -14,14 +14,14 @@
 	        // Whenever a peer connects, send them an Echo request
 	        $BV.on("peerconnect", function(peer) {
 	            // peer = { name: "admin", id: "17234564" }
-	            $BV.get(peer.id).message("My.Echo.Module", { text: "Friday" }, function(response) {
+	            $BV.get(peer.id).message("My.Echo.Module", { text: "Friday" }, true, function(response) {
 	                // response = { ... }
 	                console.log("Received: "+response.text);
 	            });
 	        });
 
 	        // Kick off the process
-	        $BV.connect("admin", "test");
+	        $BV.connect("localhost:8000", "admin", "test");
 	    </script>
 	</head>
 	<body>

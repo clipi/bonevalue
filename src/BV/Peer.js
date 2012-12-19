@@ -57,7 +57,6 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
         connectionCounter--; 
         if (connectionCounter==0) {
             if (!keepAlive) {
-                console.error("Killed");
                 deleteFunction();
             } else {
                 clearDeleteFunction();
