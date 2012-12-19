@@ -421,8 +421,10 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
         connectionCounter--; 
         if (connectionCounter==0) {
             if (!keepAlive) {
+                if (BV.Settings.Debug) console.log(id+": !keepAlive, closing...");
                 deleteFunction();
             } else {
+                if (BV.Settings.Debug) console.log(id+": keepAlive, waiting a while...");
                 clearDeleteFunction();
                 startDeleteFunction();
             }
@@ -566,7 +568,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
                 }
             };
             dataChannel.onclose = function() {
-                removedDataChannel();
+                removedDataChannel(true);
                 delete dataChannel;
                 if (BV.Settings.Debug) console.log(id+": Remote datachannel closed");
             };
@@ -614,7 +616,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
         //
         dataChannel.onclose = function() {
             delete dataChannel;
-            removedDataChannel();
+            removedDataChannel(keepAlive);
             if (BV.Settings.Debug) console.log(id+": local datachannel closed");
         };
         
