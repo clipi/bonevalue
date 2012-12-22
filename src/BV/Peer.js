@@ -106,9 +106,11 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
         pc.createAnswer(function(answer) {
             pc.setLocalDescription(answer, function() {
                 if (BV.Settings.Debug) console.log(id+": set local description (answer)");
-                pc.connectDataConnection(5000,5001);
-                if (BV.Settings.Debug) console.log(id+": Connecting 5000 -> 50001");
                 callback(answer);
+                setTimeout(function() {
+                    pc.connectDataConnection(5000,5001);
+                    if (BV.Settings.Debug) console.log(id+": Connecting 5000 -> 5001");
+                }, 2000);
             }, errorHandler)
         }, function (error) { 
             console.error(id+": "+error+" Remote description is "+pc.remoteDescription);
@@ -125,15 +127,21 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     function setAnswer(answer, callback) {
         pc.setRemoteDescription(answer, function() {
             if (BV.Settings.Debug) console.log(id+": set remote description (answer) to "+pc.remoteDescription);
-            pc.connectDataConnection(5001,5000);
-            if (BV.Settings.Debug) console.log(id+": Connecting 5001 -> 5000");
+            setTimeout(function() {
+                pc.connectDataConnection(5001,5000);
+                if (BV.Settings.Debug) console.log(id+": Connecting 5001 -> 5000");
+            }, 2000);
             callback();
         }, errorHandler);
     };
     
+    //
+    // As soon as the PeerConnection is established, create a heartbeat
+    //
     pc.onconnection = function() {
         establishHeartbeat();
     };
+    
     //
     // Peer 1 Sets up the heartbeat channel and waits for response to go READY
     //
@@ -170,16 +178,25 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     // Peer 2 detects the heartbeat channel, writes down it and goes READY
     //
     pc.ondatachannel = function(event) {
-        var dataChannel = event.channel;
+        var dataChannel = event;
         if (dataChannel.label == "heartbeat") {
             //
             // The connection was successful, cancel the connection timeout
             //
             clearConnectionTimeout();
             heartbeat = dataChannel;
-            heartbeat.send(JSON.stringify({ ready: true }), errorHandler);
-            if (BV.Settings.Debug) console.log(id+": Remote heartbeat established");
-            setReady(true);
+            if (heartbeat.readyState == 'Connecting') {
+                heartbeat.onopen = function() {
+                    heartbeat.send(JSON.stringify({ ready: true }));
+                    if (BV.Settings.Debug) console.log(id+": Remote heartbeat established");
+                    setReady(true);
+                };
+            } else {
+                heartbeat.send(JSON.stringify({ ready: true }));
+                if (BV.Settings.Debug) console.log(id+": Remote heartbeat established");
+                setReady(true);
+            }
+            
             //
             // When the heartbeat stops, dump this Peer object.
             //
@@ -204,7 +221,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
                 for (var i in BV.Module) {
                     if (BV.Module[i] == data.module) {
                         var cb = function(d) {
-                            dataChannel.send(JSON.stringify(d), errorHandler);
+                            dataChannel.send(JSON.stringify(d));
                             dataChannel.close();
                             if (BV.Settings.Debug) console.log(id+": Responded to remote request");
                         }
@@ -214,7 +231,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
                     }
                 }
                 if (!handled) {
-                    dataChannel.send(JSON.stringify({ err: "Uhh... what?!" }), errorHandler);
+                    dataChannel.send(JSON.stringify({ err: "Uhh... what?!" }));
                     dataChannel.close();
                 }
             };
