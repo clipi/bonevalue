@@ -1,7 +1,7 @@
 var BV = window.BV || {};
 BV.Objects = BV.Objects || {};
 
-window.RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+window.RTCPeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection || window.RTCPeerConnection;
 
 //
 // 
@@ -27,8 +27,8 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     //
     // Convenience functions
     //
-    pc.onerror = function(event) { console.error("!!!!ERROR!!!"); };
-    pc.onclose = function(event) { console.error("!!!CLOSE!!"); };
+    //pc.onerror = function(event) { console.error("!!!!ERROR!!!"); };
+    //pc.onclose = function(event) { console.error("!!!CLOSE!!"); };
     function canDelete() { return used && (connectionCounter==0); };
     function isReady() { return ready; };
     function setReady(b) { ready = b; };
@@ -41,7 +41,9 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     function setDeleteFunction(t) { deleteFunction = t; };
     function addConnectedCallback(callback) { connectedCallbacks.push(callback); };
     function dump() { console.log("-- "+id+": Ready:"+ready+", Used:"+used+" Count:"+connectionCounter); };
-    function errorHandler(e) { console.error(id+": Error! " + e); };
+    function errorHandler(e) { 
+        console.error(id+": Error! " + e); 
+    };
     
     function startDeleteFunction() { 
         deleteFunctionTimeout = setTimeout(function() { deleteFunction(); }, BV.Settings.DeadTimeout+(Math.random()*BV.Settings.Tolerance));
@@ -71,10 +73,14 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     // Peer 1 Creates an initial offer
     //
     function createOffer(callback) {
-        pc.createOffer(function(offer) {
-            pc.setLocalDescription(new RTCSessionDescription({sdp: offer.sdp, type: 'offer'}));
-            if (BV.Settings.Debug) console.log(id+": set local description (offer)");
-            callback(offer.sdp);
+        navigator.mozGetUserMedia({audio:true, fake:true}, function(s) {
+            pc.addStream(s);
+            pc.createOffer(function(offer) {
+                pc.setLocalDescription(offer, function() {
+                    if (BV.Settings.Debug) console.log(id+": set local description (offer)");
+                    callback(offer);
+                }, errorHandler);
+            }, errorHandler);
         }, errorHandler);
     };
     
@@ -88,8 +94,8 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     //
     // Peer 2 Receives and sets the initial offer
     //
-    function setOffer(offer) {
-        pc.setRemoteDescription(new RTCSessionDescription({sdp: offer,type: 'offer'}));
+    function setOffer(offer, callback) {
+        pc.setRemoteDescription(offer, callback, errorHandler);
         if (BV.Settings.Debug) console.log(id+": set remote description (offer) to "+pc.remoteDescription);
     };
     
@@ -98,9 +104,12 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     //
     function createAnswer(callback) {
         pc.createAnswer(function(answer) {
-            pc.setLocalDescription(new RTCSessionDescription({sdp: answer.sdp, type: 'answer'}));
-            if (BV.Settings.Debug) console.log(id+": set local description (answer)");
-            callback(answer.sdp);
+            pc.setLocalDescription(answer, function() {
+                if (BV.Settings.Debug) console.log(id+": set local description (answer)");
+                pc.connectDataConnection(5000,5001);
+                if (BV.Settings.Debug) console.log(id+": Connecting 5000 -> 50001");
+                callback(answer);
+            }, errorHandler)
         }, function (error) { 
             console.error(id+": "+error+" Remote description is "+pc.remoteDescription);
         });
@@ -113,17 +122,23 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     //
     // Peer 1 Receives and sets the answer
     //
-    function setAnswer(answer) {
-        pc.setRemoteDescription(new RTCSessionDescription({sdp: answer, type: 'answer'}));
-        if (BV.Settings.Debug) console.log(id+": set remote description (answer) to "+pc.remoteDescription);
-        setTimeout(function() { establishHeartbeat(); }, 100);
+    function setAnswer(answer, callback) {
+        pc.setRemoteDescription(answer, function() {
+            if (BV.Settings.Debug) console.log(id+": set remote description (answer) to "+pc.remoteDescription);
+            pc.connectDataConnection(5001,5000);
+            if (BV.Settings.Debug) console.log(id+": Connecting 5001 -> 5000");
+            callback();
+        }, errorHandler);
     };
     
+    pc.onconnection = function() {
+        establishHeartbeat();
+    };
     //
     // Peer 1 Sets up the heartbeat channel and waits for response to go READY
     //
     function establishHeartbeat() {
-        var heartbeat = pc.createDataChannel('heartbeat');
+        var heartbeat = pc.createDataChannel('heartbeat', { });
         heartbeat.onmessage = function(message) { 
             var data = JSON.parse(message.data); 
             //
@@ -215,7 +230,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     // Either Peer tries to send a message to the other
     //
     function sendMessage(module, data, keepAlive, callback) {
-        var dataChannel = pc.createDataChannel(Math.floor(Math.random()*999999999));
+        var dataChannel = pc.createDataChannel(Math.floor(Math.random()*999999999), {});
         //
         // Set a timeout incase the other Peer has disconnected on us
         //

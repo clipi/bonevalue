@@ -53,10 +53,12 @@ BV.Objects.PeerManager = function(EventBus) {
             newPeer.setId(data.from);
             inPeers.push(newPeer);
             if (BV.Settings.Debug) console.log(data.from+": Created inPeer (count="+inPeers.length+")");
-            newPeer.setOffer(data.spd);
-            newPeer.createAnswer(function (sdp) {
-                EventBus.dispatch(BV.Event.Net.SendPeerResponse, { to: data.from, from: EventBus.getId(), peer: data.peer, spd: sdp });
+            newPeer.setOffer(data.spd, function() {
+                newPeer.createAnswer(function (sdp) {
+                    EventBus.dispatch(BV.Event.Net.SendPeerResponse, { to: data.from, from: EventBus.getId(), peer: data.peer, spd: sdp });
+                });
             });
+            
             newPeer.setConnectionTimeout(setTimeout(function() {
                 //
                 // If timeout wasn't cancelled, assume connction failed and delete

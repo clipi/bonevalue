@@ -23,7 +23,7 @@ BV.Objects.EventBus = function() {
         }
         if (longQueue.hasOwnProperty(event)) {
             for (var i=0; i<longQueue[event].length; i++) {
-                setTimeout(longQueue[event][i](obj), 1);
+                longQueue[event][i](obj);
             }
         }
     };
