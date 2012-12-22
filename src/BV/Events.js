@@ -32,5 +32,52 @@ BV.Settings.ConnectionTimeout = 15000;
 BV.Settings.DeadTimeout = 5000;
 BV.Settings.Tolerance = 5000;
 
+if (window.mozRTCPeerConnection) {
+    window.RTCPeerConnection = window.mozRTCPeerConnection;
+    navigator.getUserMedia = navigator.mozGetUserMedia;
+} else if (window.webkitRTCPeerConnection) {
+    window.RTCPeerConnection = window.webkitRTCPeerConnection;
+    navigator.getUserMedia = navigator.webkitGetUserMedia;
+    
+    var oldSetLocalDescription = window.RTCPeerConnection.prototype.setLocalDescription;
+    window.RTCPeerConnection.prototype.setLocalDescription = function(sdp, callback, fail) {
+        oldSetLocalDescription.call(this, sdp);
+        callback();
+    };
+    
+    var oldSetRemoteDescription = window.RTCPeerConnection.prototype.setRemoteDescription;
+    window.RTCPeerConnection.prototype.setRemoteDescription = function(obj, cb, fail) {
+        oldSetRemoteDescription.call(this, new RTCSessionDescription({sdp: obj.sdp, type: obj.type}));
+        cb();
+    };
+    
+    window.RTCPeerConnection.prototype.connectDataConnection = function(a, b) {
+        // do nothing...
+    };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

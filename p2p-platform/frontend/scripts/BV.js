@@ -32,6 +32,53 @@ BV.Settings.ConnectionTimeout = 15000;
 BV.Settings.DeadTimeout = 5000;
 BV.Settings.Tolerance = 5000;
 
+if (window.mozRTCPeerConnection) {
+    window.RTCPeerConnection = window.mozRTCPeerConnection;
+    navigator.getUserMedia = navigator.mozGetUserMedia;
+} else if (window.webkitRTCPeerConnection) {
+    window.RTCPeerConnection = window.webkitRTCPeerConnection;
+    navigator.getUserMedia = navigator.webkitGetUserMedia;
+    
+    var oldSetLocalDescription = window.RTCPeerConnection.prototype.setLocalDescription;
+    window.RTCPeerConnection.prototype.setLocalDescription = function(sdp, callback, fail) {
+        oldSetLocalDescription.call(this, sdp);
+        callback();
+    };
+    
+    var oldSetRemoteDescription = window.RTCPeerConnection.prototype.setRemoteDescription;
+    window.RTCPeerConnection.prototype.setRemoteDescription = function(obj, cb, fail) {
+        oldSetRemoteDescription.call(this, new RTCSessionDescription({sdp: obj.sdp, type: obj.type}));
+        cb();
+    };
+    
+    window.RTCPeerConnection.prototype.connectDataConnection = function(a, b) {
+        // do nothing...
+    };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 var BV = window.BV || {};
@@ -196,7 +243,7 @@ BV.Objects.PeerManager = function(EventBus) {
     EventBus.wait(BV.Event.Net.PeerResponse, function(data) { 
         for (var i=0; i<outPeers.length; i++) {
             if (outPeers[i].getId() == data.from) {
-                outPeers[i].setAnswer(data.spd);
+                outPeers[i].setAnswer(data.spd, function() { });
                 break;
             }
         }
@@ -367,8 +414,6 @@ BV.Objects.PeerManager = function(EventBus) {
 var BV = window.BV || {};
 BV.Objects = BV.Objects || {};
 
-window.RTCPeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection || window.RTCPeerConnection;
-
 //
 // 
 //
@@ -439,7 +484,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     // Peer 1 Creates an initial offer
     //
     function createOffer(callback) {
-        navigator.mozGetUserMedia({audio:true, fake:true}, function(s) {
+        navigator.getUserMedia({audio:true, fake:true}, function(s) {
             pc.addStream(s);
             pc.createOffer(function(offer) {
                 pc.setLocalDescription(offer, function() {

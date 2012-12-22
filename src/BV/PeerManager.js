@@ -85,7 +85,7 @@ BV.Objects.PeerManager = function(EventBus) {
     EventBus.wait(BV.Event.Net.PeerResponse, function(data) { 
         for (var i=0; i<outPeers.length; i++) {
             if (outPeers[i].getId() == data.from) {
-                outPeers[i].setAnswer(data.spd);
+                outPeers[i].setAnswer(data.spd, function() { });
                 break;
             }
         }

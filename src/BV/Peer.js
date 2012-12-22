@@ -1,8 +1,6 @@
 var BV = window.BV || {};
 BV.Objects = BV.Objects || {};
 
-window.RTCPeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection || window.RTCPeerConnection;
-
 //
 // 
 //
@@ -73,7 +71,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     // Peer 1 Creates an initial offer
     //
     function createOffer(callback) {
-        navigator.mozGetUserMedia({audio:true, fake:true}, function(s) {
+        navigator.getUserMedia({audio:true, fake:true}, function(s) {
             pc.addStream(s);
             pc.createOffer(function(offer) {
                 pc.setLocalDescription(offer, function() {
