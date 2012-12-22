@@ -3,28 +3,41 @@
     <head>
 	    <script type="text/javascript" src="scripts/BV.js"></script>
 	    <script type="text/javascript">
-	        // Define an Echo module with a slight twist
-	        $BV.module("My.Echo.Module", function(e) {
-	            // e = { request: { ... }, callback: function(response) { ... } }
-	            var chineseWhispers = "Not "+e.request.text;
-	            console.log("Routing data: "+chineseWhispers);
-	            e.callback({text: chineseWhispers});
-	        });
-
-	        // Whenever a peer connects, send them an Echo request
-	        $BV.on("peerconnect", function(peer) {
-	            // peer = { name: "admin", id: "17234564" }
-	            $BV.get(peer.id).message("My.Echo.Module", { text: "Friday" }, true, function(response) {
-	                // response = { ... }
-	                console.log("Received: "+response.text);
+	        function bootstrap() {
+	            var consoleDiv = document.querySelector("body");
+                console.log = function(s) {
+                    var peerItem = document.createElement("div");   
+                    peerItem.style.background = 'rgba(65, 155, 255, 0.4)';
+                    peerItem.appendChild(document.createTextNode(s));
+                    consoleDiv.insertBefore(peerItem, consoleDiv.childNodes[0]);
+                    setTimeout(function() {
+                        peerItem.style.background = 'transparent';
+                    }, 500);
+                };
+	        
+	            // Define an Echo module with a slight twist
+	            $BV.module("My.Echo.Module", function(e) {
+	                // e = { request: { ... }, callback: function(response) { ... } }
+	                var chineseWhispers = "Not "+e.request.text;
+	                console.log("Routing data: "+chineseWhispers);
+	                e.callback({text: chineseWhispers});
 	            });
-	        });
 
-	        // Kick off the process
-	        $BV.connect("localhost:8000", "admin", "test");
+	            // Whenever a peer connects, send them an Echo request
+	            $BV.on("peerconnect", function(peer) {
+	                // peer = { name: "admin", id: "17234564" }
+	                $BV.get(peer.id).message("My.Echo.Module", { text: "Friday" }, true, function(response) {
+	                    // response = { ... }
+	                    console.log("Received: "+response.text);
+	                });
+	            });
+
+	            // Kick off the process
+	            $BV.connect("localhost:8000", "admin", "test");
+	        }
 	    </script>
 	</head>
-	<body>
+	<body onload="bootstrap();">
 	    &nbsp;
 	</body>
 </html>
