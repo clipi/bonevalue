@@ -176,7 +176,7 @@ BV.Objects.Peer = function(EventBus, PeerManager) {
     // Peer 2 detects the heartbeat channel, writes down it and goes READY
     //
     pc.ondatachannel = function(event) {
-        var dataChannel = event;
+        var dataChannel = event.channel || event;
         if (dataChannel.label == "heartbeat") {
             //
             // The connection was successful, cancel the connection timeout

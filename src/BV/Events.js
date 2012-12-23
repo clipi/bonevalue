@@ -28,7 +28,7 @@ BV.Settings = {};
 BV.Settings.Debug = false;
 BV.Settings.MaxInPeer = 5;
 BV.Settings.MaxOutPeer = 5;
-BV.Settings.ConnectionTimeout = 15000;
+BV.Settings.ConnectionTimeout = 5000;
 BV.Settings.DeadTimeout = 5000;
 BV.Settings.Tolerance = 5000;
 
@@ -52,7 +52,7 @@ if (window.mozRTCPeerConnection) {
     };
     
     window.RTCPeerConnection.prototype.connectDataConnection = function(a, b) {
-        // do nothing...
+        this.onconnection(event);
     };
 }
 
